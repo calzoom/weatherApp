@@ -1,3 +1,4 @@
+
 package com.example.japjot.weatherapp;
 
 import android.support.v7.app.AppCompatActivity;
