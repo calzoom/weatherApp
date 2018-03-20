@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String webapi = "https://api.darksky.net/forecast/";
     double longitudeNetwork, latitudeNetwork;
     JSONObject jsonObject;
+    private LocationListener locationListener;
 
     static String convertStreamToString(java.io.InputStream is) {
         java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
@@ -52,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
                     //get my stuff
                     @Override
                     public void run() {
-                        class RetrieveDataTask extends AsyncTask<Object, Void, JSONObject> {
+                         class RetrieveDataTask extends AsyncTask<Object, Void, JSONObject> {
                             String latitude, longitude;
                             View view;
 
@@ -184,5 +185,34 @@ public class MainActivity extends AppCompatActivity {
 //        recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         recyclerView.setAdapter(new com.example.japjot.weatherapp.ListAdapter(this, jsonObject));
 
+        LocationManager lm = (LocationManager)getSystemService(getParent().LOCATION_SERVICE);
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                new RetrieveDataTask().execute(View.inflate(getApplicationContext(), R.layout.activity_main, null), location);
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+
+            }
+        };
+        try {
+            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 10, locationListener);
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        }
+
     }
 }
+
