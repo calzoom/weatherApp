@@ -44,121 +44,121 @@ public class MainActivity extends AppCompatActivity {
         // why isn't this working
         final LocationListener locationListenerNetwork = new LocationListener() {
 
-            public void onLocationChanged(Location location) {
-                longitudeNetwork = location.getLongitude();
-                latitudeNetwork = location.getLatitude();
+        public void onLocationChanged(Location location) {
+            longitudeNetwork = location.getLongitude();
+            latitudeNetwork = location.getLatitude();
 
-                runOnUiThread(new Runnable() {
+            runOnUiThread(new Runnable() {
 
-                    //get my stuff
-                    @Override
-                    public void run() {
-                         class RetrieveDataTask extends AsyncTask<Object, Void, JSONObject> {
-                            String latitude, longitude;
-                            View view;
+                //get my stuff
+                @Override
+                public void run() {
+                      class RetrieveDataTask extends AsyncTask<Object, Void, JSONObject> {
+                        String latitude, longitude;
+                        View view;
 
-                            public RetrieveDataTask(String latitude, String longitude) {
-                                this.latitude = latitude;
-                                this.longitude = longitude;
+                        public RetrieveDataTask(String latitude, String longitude) {
+                            this.latitude = latitude;
+                            this.longitude = longitude;
+                        }
+
+                        protected JSONObject doInBackground(Object... objects) {
+
+                            String urlString = webapi + secretkey + "/" + latitude + "," + longitude;
+
+                            try {
+
+                                // url hubbies
+                                URL url = new URL(urlString);
+                                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                                conn.setRequestMethod("GET");
+                                InputStream in = new BufferedInputStream(conn.getInputStream());
+                                String response = convertStreamToString(in);
+                                JSONObject json = new JSONObject(response);
+                                return json;
+
+                            } catch (Exception e) {
+                                Log.e("URL_ERROR", urlString);
+                                return null;
                             }
 
-                            protected JSONObject doInBackground(Object... objects) {
+                        }
 
-                                String urlString = webapi + secretkey + "/" + latitude + "," + longitude;
+                        // info stuff
+                        @Override
+                        protected void onPostExecute(JSONObject jsonObject) {
+                            super.onPostExecute(jsonObject);
+                            try {
 
-                                try {
+                                String temperatureMin = ((JSONObject) (jsonObject.getJSONObject("daily").getJSONArray("data").get(0))).getString("temperatureMin");
+                                ((TextView) view.findViewById(R.id.mintemp)).setText(temperatureMin);
 
-                                    // url hubbies
-                                    URL url = new URL(urlString);
-                                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                                    conn.setRequestMethod("GET");
-                                    InputStream in = new BufferedInputStream(conn.getInputStream());
-                                    String response = convertStreamToString(in);
-                                    JSONObject json = new JSONObject(response);
-                                    return json;
+                                String temperatureMax = ((JSONObject) (jsonObject.getJSONObject("daily").getJSONArray("data").get(0))).getString("temperatureMax");
+                                ((TextView) view.findViewById(R.id.maxtemp)).setText(temperatureMax);
 
-                                } catch (Exception e) {
-                                    Log.e("URL_ERROR", urlString);
-                                    return null;
+                                String summary = ((JSONObject) (jsonObject.getJSONObject("daily").getJSONArray("data").get(0))).getString("summary");
+                                ((TextView) view.findViewById(R.id.description)).setText(summary);
+
+                                String precipProb = ((JSONObject) (jsonObject.getJSONObject("daily").getJSONArray("data").get(0))).getString("precipProbability");
+                                ((TextView) view.findViewById(R.id.precipprob)).setText(precipProb);
+
+                                String precipType = ((JSONObject) (jsonObject.getJSONObject("daily").getJSONArray("data").get(0))).getString("precipType");
+                                ((TextView) view.findViewById(R.id.preciptype)).setText(precipType);
+
+                                Date date = new Date(((JSONObject) (jsonObject.getJSONObject("daily").getJSONArray("data").get(0))).getString("precipIntensityMaxTime"));
+                                SimpleDateFormat formatter = new SimpleDateFormat("HH:mm");
+
+                                String s = formatter.format(date);
+
+                                ((TextView) view.findViewById(R.id.preciptime)).setText(s);
+                                String icon = ((JSONObject) (jsonObject.getJSONObject("daily").getJSONArray("data").get(0))).getString("icon");
+                                ImageView weatherIcon = view.findViewById(R.id.weathericon);
+
+                                switch (icon) {
+                                    case "rain":
+                                        weatherIcon.setImageResource(R.drawable.ic_cloud_rain);
+                                        break;
+                                    case "snow":
+                                        weatherIcon.setImageResource(R.drawable.ic_cloud_snow_alt);
+                                        break;
+                                    case "sleet":
+                                        weatherIcon.setImageResource(R.drawable.ic_cloud_hail);
+                                        break;
+                                    case "wind":
+                                        weatherIcon.setImageResource(R.drawable.ic_wind);
+                                        break;
+                                    case "fog":
+                                        weatherIcon.setImageResource(R.drawable.ic_cloud_fog);
+                                        break;
+                                    case "cloudy":
+                                        weatherIcon.setImageResource(R.drawable.ic_cloud);
+                                        break;
+                                    case "partly-cloudy-day":
+                                        weatherIcon.setImageResource(R.drawable.ic_cloud_sun);
+                                        break;
+                                    case "partly-cloudy-night":
+                                        weatherIcon.setImageResource(R.drawable.ic_cloud_moon);
+                                        break;
+                                    case "clear-day":
+                                        weatherIcon.setImageResource(R.drawable.ic_sun);
+                                        break;
+                                    case "clear-night":
+                                        weatherIcon.setImageResource(R.drawable.ic_moon);
+                                        break;
                                 }
 
+                            } catch (JSONException f) {
+                                f.printStackTrace();
                             }
 
-                            // info stuff
-                            @Override
-                            protected void onPostExecute(JSONObject jsonObject) {
-                                super.onPostExecute(jsonObject);
-                                try {
 
-                                    String temperatureMin = ((JSONObject) (jsonObject.getJSONObject("daily").getJSONArray("data").get(0))).getString("temperatureMin");
-                                    ((TextView) view.findViewById(R.id.mintemp)).setText(temperatureMin);
-
-                                    String temperatureMax = ((JSONObject) (jsonObject.getJSONObject("daily").getJSONArray("data").get(0))).getString("temperatureMax");
-                                    ((TextView) view.findViewById(R.id.maxtemp)).setText(temperatureMax);
-
-                                    String summary = ((JSONObject) (jsonObject.getJSONObject("daily").getJSONArray("data").get(0))).getString("summary");
-                                    ((TextView) view.findViewById(R.id.description)).setText(summary);
-
-                                    String precipProb = ((JSONObject) (jsonObject.getJSONObject("daily").getJSONArray("data").get(0))).getString("precipProbability");
-                                    ((TextView) view.findViewById(R.id.precipprob)).setText(precipProb);
-
-                                    String precipType = ((JSONObject) (jsonObject.getJSONObject("daily").getJSONArray("data").get(0))).getString("precipType");
-                                    ((TextView) view.findViewById(R.id.preciptype)).setText(precipType);
-
-                                    Date date = new Date(((JSONObject) (jsonObject.getJSONObject("daily").getJSONArray("data").get(0))).getString("precipIntensityMaxTime"));
-                                    SimpleDateFormat formatter = new SimpleDateFormat("HH:mm");
-
-                                    String s = formatter.format(date);
-
-                                    ((TextView) view.findViewById(R.id.preciptime)).setText(s);
-                                    String icon = ((JSONObject) (jsonObject.getJSONObject("daily").getJSONArray("data").get(0))).getString("icon");
-                                    ImageView weatherIcon = view.findViewById(R.id.weathericon);
-
-                                    switch (icon) {
-                                        case "rain":
-                                            weatherIcon.setImageResource(R.drawable.ic_cloud_rain);
-                                            break;
-                                        case "snow":
-                                            weatherIcon.setImageResource(R.drawable.ic_cloud_snow_alt);
-                                            break;
-                                        case "sleet":
-                                            weatherIcon.setImageResource(R.drawable.ic_cloud_hail);
-                                            break;
-                                        case "wind":
-                                            weatherIcon.setImageResource(R.drawable.ic_wind);
-                                            break;
-                                        case "fog":
-                                            weatherIcon.setImageResource(R.drawable.ic_cloud_fog);
-                                            break;
-                                        case "cloudy":
-                                            weatherIcon.setImageResource(R.drawable.ic_cloud);
-                                            break;
-                                        case "partly-cloudy-day":
-                                            weatherIcon.setImageResource(R.drawable.ic_cloud_sun);
-                                            break;
-                                        case "partly-cloudy-night":
-                                            weatherIcon.setImageResource(R.drawable.ic_cloud_moon);
-                                            break;
-                                        case "clear-day":
-                                            weatherIcon.setImageResource(R.drawable.ic_sun);
-                                            break;
-                                        case "clear-night":
-                                            weatherIcon.setImageResource(R.drawable.ic_moon);
-                                            break;
-                                    }
-
-                                } catch (JSONException f) {
-                                    f.printStackTrace();
-                                }
-
-
-                            }
                         }
                     }
-                });
+                }
+            });
 
 
-            }
+        }
 
             //implemented stuffs
             @Override
@@ -189,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                new RetrieveDataTask().execute(View.inflate(getApplicationContext(), R.layout.activity_main, null), location);
+                new RetrieveDataTask.RetrieveDataTask().execute(View.inflate(getApplicationContext(), R.layout.activity_main, null), location);
             }
 
             @Override
